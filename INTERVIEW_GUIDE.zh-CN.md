@@ -1,4 +1,4 @@
-# CoastKind / WAINET：整改后的讲解与练习
+# WAINET：整改后的讲解与练习
 
 ## 先正确定位这个项目
 
@@ -33,7 +33,7 @@
 
 ## 一段可练习的英文介绍
 
-“CoastKind is an AI-assisted prototype I developed for community coastal
+“WAINET is an AI-assisted prototype I developed for community coastal
 observations. It connects a Python API and SQLite evidence store to a multimodal
 AI workflow, with human review before eligible observations contribute to shared
 outputs. I used failure-injection tests to check that timeouts, malformed outputs

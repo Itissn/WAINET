@@ -1,5 +1,9 @@
 # WAINET
 
+The name combines **wai** (Māori for water) with **net**, reflecting a network of
+community observations. [Wai in Te Aka Māori Dictionary](https://maoridictionary.co.nz/word/9019).
+Use **WAINET** for the project name and `wainet` for technical identifiers.
+
 [Public presentation](https://itissn.github.io/coastkind-wellington/) · [Multimodal AI and dataset explorer](https://itissn.github.io/coastkind-wellington/demo.html)
 
 An English-language, map-first coastal community application for Wellington. Residents upload a photo, optionally attach a confirmed device location and a few words, and contribute structured observations to a local SQLite database.
