@@ -16,7 +16,8 @@ from server import COMMUNITIES
 
 PACKAGE_KIND = 'wainet-static-synthetic-v1'
 MARKER = '.wainet-presentation.json'
-ASSETS = ('app.js', 'styles.css', 'map.css', 'account.css', 'demo.js', 'demo.css', 'static_demo.js')
+ASSETS = ('app.js', 'styles.css', 'map.css', 'account.css', 'demo.js', 'demo.css', 'static_demo.js',
+          'community_activity.js', 'community_activity.css', 'community-highlights.css', 'responsive.css')
 FORBIDDEN_KEYS = {'password', 'password_hash', 'token_hash', 'csrf_token', 'csrfToken', 'voucher_code', 'api_key', 'email', 'image'}
 
 

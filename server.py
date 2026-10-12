@@ -499,7 +499,7 @@ class Handler(BaseHTTPRequestHandler):
     def handle(self):
         try:
             super().handle()
-        except (ConnectionResetError, BrokenPipeError):
+        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
             pass
 
     def log_message(self, *_):
@@ -656,7 +656,11 @@ class Handler(BaseHTTPRequestHandler):
                   "/app.js": ("app.js", "text/javascript"), "/styles.css": ("styles.css", "text/css"),
                   "/map.css": ("map.css", "text/css"), "/account.css": ("account.css", "text/css"), "/admin": ("admin.html", "text/html"),
                   "/admin.html": ("admin.html", "text/html"), "/admin.js": ("admin.js", "text/javascript"),
-                  "/admin.css": ("admin.css", "text/css")}
+                  "/admin.css": ("admin.css", "text/css"),
+                  "/community_activity.js": ("community_activity.js", "text/javascript"),
+                  "/community_activity.css": ("community_activity.css", "text/css"),
+                  "/community-highlights.css": ("community-highlights.css", "text/css"),
+                  "/responsive.css": ("responsive.css", "text/css")}
         if path in assets:
             filename, mime = assets[path]
             return self.send_bytes(200, (ROOT / filename).read_bytes(), mime + "; charset=utf-8")

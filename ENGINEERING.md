@@ -57,7 +57,11 @@ The first command injects provider failures, malformed responses and a database
 outage. The second runs the full existing suite plus those new checks. All model
 responses in these tests are mocked. Passing these tests proves the tested
 software behaviours, **not model accuracy or prompt-injection resistance**.
-The CI matrix is configuration until a GitHub run actually succeeds.
+The reliability baseline passed GitHub CI on Python 3.11 and 3.12. Subsequent
+changes must pass their own checks; consult the repository's latest Actions run.
+`browser_smoke.py` also verifies the complete account/upload/admin-review/export
+journey against a temporary server. `presentation_smoke.py` checks the actual
+packaged read-only website. Both use headless Chromium; see START_HERE.md.
 
 ## Trace a local HTTP request
 
@@ -110,8 +114,10 @@ separate feature with dated trusted sources, citations, abstention and evaluatio
    model/prompt versions, latency and cost. No live verification is claimed here.
 3. Replace `http.server` with a supported production application server; introduce
    deadlines, upload/concurrency limits and a durable supervised job queue.
-4. Add operational alerts, backup/restore drills, retention/deletion controls,
+4. Add operational alerts, scheduled private backups, retention/deletion controls,
    secrets management and account recovery before real public usage.
+   A local backup/restore command and recovery regression test now exist in
+   `storage_ops.py` and `test_storage_ops.py`; off-site operation still needs setup.
 5. For a regulated enterprise, assess SSO, fine-grained authorization, data
    residency, security review and audit requirements with that organisation.
 

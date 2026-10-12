@@ -12,6 +12,9 @@ Built for swimmers, anglers, boaters, fishing crews and environmental advocates.
 
 ## Run
 
+See [START_HERE.md](START_HERE.md) for the complete setup, browser acceptance check,
+administrator workflow, backup/restore commands and opt-in live-model check.
+
 For a code-oriented review, start with [engineering decisions and verification](ENGINEERING.md).
 It covers provider failures, private telemetry, automated checks, and the boundaries
 between this prototype and a production service. A [Chinese walkthrough](INTERVIEW_GUIDE.zh-CN.md)
