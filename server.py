@@ -16,8 +16,8 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
-from urllib.request import Request, urlopen
-from uuid import UUID
+from urllib.request import urlopen
+from uuid import UUID, uuid4
 from PIL import Image, ImageOps, UnidentifiedImageError
 import accounts
 import rewards
@@ -25,6 +25,8 @@ import admin_data
 import admin_ops
 import community_status
 import official_data
+from ai_transport import AnalysisFailure, structured_response
+import telemetry
 
 ROOT = Path(__file__).resolve().parent
 # Approximate navigation/validation centres, not monitoring or water-quality results.
@@ -429,17 +431,11 @@ def analyze(row, api_key, model, opener=urlopen):
                          {"type": "input_image", "image_url": image_url, "detail": "auto"}]}],
                "text": {"format": {"type": "json_schema", "name": "coastal_observation", "strict": True, "schema": ANALYSIS_SCHEMA}},
                "max_output_tokens": 1800}
-    request = Request("https://api.openai.com/v1/responses", data=json.dumps(payload).encode(),
-                      headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"})
-    with opener(request, timeout=60) as response:
-        result = json.load(response)
-    if result.get("status") != "completed":
-        raise ValueError("AI analysis was incomplete")
-    content = [c for item in result.get("output", []) for c in item.get("content", [])]
-    if any(c.get("type") == "refusal" for c in content):
-        raise ValueError("AI analysis was declined")
-    output = "".join(c.get("text", "") for c in content if c.get("type") == "output_text")
-    return validate_analysis(json.loads(output)), result.get("id")
+    result, response_id = structured_response(payload, api_key, opener)
+    try:
+        return validate_analysis(result), response_id
+    except (ValueError, TypeError):
+        raise AnalysisFailure("invalid_analysis") from None
 
 
 def process_next(store, api_key, model, analyzer=analyze):
@@ -455,26 +451,55 @@ def process_next(store, api_key, model, analyzer=analyze):
         if not row:
             return False
         db.execute("UPDATE observations SET status='processing',model=?,analysis_error=NULL WHERE id=?", (model, row["id"]))
+    started = time.monotonic()
+    operation_id = str(uuid4())
+    outcome, category = "succeeded", "none"
     try:
         result, response_id = analyzer(row, api_key, model)
         result = validate_analysis(result)
         with store.connect() as db:
             db.execute("UPDATE observations SET status='analyzed',analysis=?,response_id=?,analyzed_at=?,review_status='pending' WHERE id=?",
                        (json.dumps(result), response_id, now(), row["id"]))
-    except Exception:
+    except Exception as error:
+        outcome = "failed"
+        category = (error.category if isinstance(error, AnalysisFailure) else
+                    "storage" if isinstance(error, sqlite3.Error) else "internal")
         # Keep evidence even if the provider fails. Never expose provider responses or secrets.
         with store.connect() as db:
             db.execute("UPDATE observations SET status='failed',analysis_error=? WHERE id=?",
                        ("Analysis unavailable. The original observation is saved.", row["id"]))
+    finally:
+        telemetry.emit("ai_analysis", operation_id=operation_id, outcome=outcome,
+                       category=category, duration_ms=round((time.monotonic() - started) * 1000, 2))
     store.refresh_alerts()
     return True
 
 
 class Handler(BaseHTTPRequestHandler):
+    def handle_one_request(self):
+        self.request_id = str(uuid4())
+        self.request_started = time.monotonic()
+        self.response_status = None
+        try:
+            super().handle_one_request()
+        finally:
+            if self.response_status is not None:
+                method = getattr(self, "command", "")
+                telemetry.emit("http_request", request_id=self.request_id,
+                               method=method if method in {"GET", "POST", "HEAD", "OPTIONS", "PUT", "DELETE", "PATCH"} else "OTHER",
+                               route=telemetry.route_label(getattr(self, "path", "")),
+                               status=self.response_status,
+                               duration_ms=round((time.monotonic() - self.request_started) * 1000, 2))
+
+    def send_response(self, code, message=None):
+        self.response_status = code
+        super().send_response(code, message)
+        self.send_header("X-Request-ID", self.request_id)
+
     def handle(self):
         try:
             super().handle()
-        except (ConnectionResetError, BrokenPipeError):
+        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
             pass
 
     def log_message(self, *_):
@@ -541,8 +566,11 @@ class Handler(BaseHTTPRequestHandler):
             return self.json(403, {"error": "Invalid host."})
         path = urlsplit(self.path).path
         if path == "/api/health":
-            with self.server.store.connect() as db:
-                admin_configured = bool(db.execute("SELECT 1 FROM users WHERE role='admin' LIMIT 1").fetchone())
+            try:
+                with self.server.store.connect() as db:
+                    admin_configured = bool(db.execute("SELECT 1 FROM users WHERE role='admin' LIMIT 1").fetchone())
+            except (sqlite3.Error, OSError):
+                return self.json(503, {"error": "Storage is temporarily unavailable."})
             return self.json(200, {"storage": "sqlite", "aiConfigured": bool(self.server.api_key), "adminConfigured": admin_configured})
         if path == "/api/auth/me":
             return self.json(200, self.auth_session() or {"user": None, "csrfToken": None})
@@ -628,7 +656,11 @@ class Handler(BaseHTTPRequestHandler):
                   "/app.js": ("app.js", "text/javascript"), "/styles.css": ("styles.css", "text/css"),
                   "/map.css": ("map.css", "text/css"), "/account.css": ("account.css", "text/css"), "/admin": ("admin.html", "text/html"),
                   "/admin.html": ("admin.html", "text/html"), "/admin.js": ("admin.js", "text/javascript"),
-                  "/admin.css": ("admin.css", "text/css")}
+                  "/admin.css": ("admin.css", "text/css"),
+                  "/community_activity.js": ("community_activity.js", "text/javascript"),
+                  "/community_activity.css": ("community_activity.css", "text/css"),
+                  "/community-highlights.css": ("community-highlights.css", "text/css"),
+                  "/responsive.css": ("responsive.css", "text/css")}
         if path in assets:
             filename, mime = assets[path]
             return self.send_bytes(200, (ROOT / filename).read_bytes(), mime + "; charset=utf-8")
@@ -792,6 +824,7 @@ def load_config():
 
 
 def main():
+    telemetry.configure()
     load_config()
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=int(os.getenv("PORT", "8000")))

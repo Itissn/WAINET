@@ -5,6 +5,8 @@ preview.png
 !.env.example
 /data/
 __pycache__/
+.venv/
+.pytest_cache/
 *.pyc
 *.sqlite
 *.sqlite3

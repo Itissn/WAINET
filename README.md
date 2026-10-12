@@ -1,5 +1,9 @@
 # WAINET
 
+The name combines **wai** (Māori for water) with **net**, reflecting a network of
+community observations. [Wai in Te Aka Māori Dictionary](https://maoridictionary.co.nz/word/9019).
+Use **WAINET** for the project name and `wainet` for technical identifiers.
+
 [Public presentation](https://itissn.github.io/WAINET/) · [Multimodal AI and dataset explorer](https://itissn.github.io/WAINET/demo.html)
 
 An English-language, map-first coastal community application for Wellington. Residents upload a photo, optionally attach a confirmed device location and a few words, and contribute structured observations to a local SQLite database.
@@ -7,6 +11,14 @@ An English-language, map-first coastal community application for Wellington. Res
 Built for swimmers, anglers, boaters, fishing crews and environmental advocates. Its purpose is to turn small everyday contributions into shared evidence that can help councils prioritise monitoring and clean-up, reduce monitoring costs, and improve coastal life. These are intended benefits, not measured outcomes. Community observations complement water-quality testing; photographs and personal experiences do not establish safe swimming or fishing conditions.
 
 ## Run
+
+See [START_HERE.md](START_HERE.md) for the complete setup, browser acceptance check,
+administrator workflow, backup/restore commands and opt-in live-model check.
+
+For a code-oriented review, start with [engineering decisions and verification](ENGINEERING.md).
+It covers provider failures, private telemetry, automated checks, and the boundaries
+between this prototype and a production service. A [Chinese walkthrough](INTERVIEW_GUIDE.zh-CN.md)
+explains how to reproduce and discuss the engineering work.
 
 Requires Python 3.10+ and Pillow (already available in this workspace).
 
