@@ -8,6 +8,11 @@ Built for swimmers, anglers, boaters, fishing crews and environmental advocates.
 
 ## Run
 
+For a code-oriented review, start with [engineering decisions and verification](ENGINEERING.md).
+It covers provider failures, private telemetry, automated checks, and the boundaries
+between this prototype and a production service. A [Chinese walkthrough](INTERVIEW_GUIDE.zh-CN.md)
+explains how to reproduce and discuss the engineering work.
+
 Requires Python 3.10+ and Pillow (already available in this workspace).
 
 ```powershell
