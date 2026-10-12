@@ -1,6 +1,6 @@
 # WAINET
 
-[Public presentation](https://itissn.github.io/coastkind-wellington/) · [Multimodal AI and dataset explorer](https://itissn.github.io/coastkind-wellington/demo.html)
+[Public presentation](https://itissn.github.io/WAINET/) · [Multimodal AI and dataset explorer](https://itissn.github.io/WAINET/demo.html)
 
 An English-language, map-first coastal community application for Wellington. Residents upload a photo, optionally attach a confirmed device location and a few words, and contribute structured observations to a local SQLite database.
 
